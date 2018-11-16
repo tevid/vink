@@ -33,7 +33,7 @@ type (
 		MsgBufferSize   int
 		MsgSendChanSize int
 		MsgRecvChanSize int
-		PingInterval    time.Duration
+		PingDuration    time.Duration
 		PingTimeout     time.Duration
 		TimeoutCallBack func() bool
 		ServerId        uint32
@@ -70,67 +70,67 @@ func newAgent(maxPacketSize, recvChanSize int, msgHandler MsgHandler) *Agent {
 	}
 }
 
-func DialServer(network, addr string, cfg AgentConfig) (*Agent, error) {
+func DialServer(network, addr string, agentCfg AgentConfig) (*Agent, error) {
 	conn, err := net.Dial(network, addr)
 	if err != nil {
 		return nil, err
 	}
-	return NewServer(conn, cfg)
+	return NewServer(conn, agentCfg)
 }
 
-func DialClient(network, addr string, cfg AgentConfig) (*Agent, error) {
+func DialClient(network, addr string, agentCfg AgentConfig) (*Agent, error) {
 	conn, err := net.Dial(network, addr)
 	if err != nil {
 		return nil, err
 	}
-	return NewClient(conn, cfg), nil
+	return NewClient(conn, agentCfg), nil
 }
 
-func NewServer(conn net.Conn, cfg AgentConfig) (*Agent, error) {
+func NewServer(conn net.Conn, agentCfg AgentConfig) (*Agent, error) {
 
-	agent := newAgent(cfg.MaxPacket, cfg.MsgRecvChanSize, cfg.msgHandler)
+	agent := newAgent(agentCfg.MaxPacket, agentCfg.MsgRecvChanSize, agentCfg.msgHandler)
 
-	if err := agent.recvAuth(conn, cfg.ServerId, []byte(cfg.AuthKey)); err != nil {
+	if err := agent.recvAuth(conn, agentCfg.ServerId, []byte(agentCfg.AuthKey)); err != nil {
 		GetLogger().Errorf("agent server auth error : %v", err)
 		return nil, err
 	}
 
-	agent.session = NewSession(agent.newProxyCodec(0, conn, cfg.MsgBufferSize), cfg.MsgSendChanSize)
+	agent.session = NewSession(agent.newProxyCodec(0, conn, agentCfg.MsgBufferSize), agentCfg.MsgSendChanSize)
 
 	go agent.loop()
 
-	if cfg.PingInterval != 0 {
-		if cfg.PingInterval > 1800*time.Second {
+	if agentCfg.PingDuration != 0 {
+		if agentCfg.PingDuration > 1800*time.Second {
 			panic("over ping interval limit")
 		}
 
-		if cfg.PingTimeout == 0 {
+		if agentCfg.PingTimeout == 0 {
 			panic("ping timeout is 0")
 		}
-		go agent.keepalive(cfg.PingInterval, cfg.PingTimeout, cfg.TimeoutCallBack)
+		go agent.keepalive(agentCfg.PingDuration, agentCfg.PingTimeout, agentCfg.TimeoutCallBack)
 	}
 
 	return agent, nil
 }
 
-func NewClient(conn net.Conn, cfg AgentConfig) *Agent {
+func NewClient(conn net.Conn, agentCfg AgentConfig) *Agent {
 
-	agent := newAgent(cfg.MaxPacket, cfg.MsgRecvChanSize, cfg.msgHandler)
+	agent := newAgent(agentCfg.MaxPacket, agentCfg.MsgRecvChanSize, agentCfg.msgHandler)
 
-	agent.session = NewSession(agent.newProxyCodec(0, conn, cfg.MsgBufferSize), cfg.MsgSendChanSize)
+	agent.session = NewSession(agent.newProxyCodec(0, conn, agentCfg.MsgBufferSize), agentCfg.MsgSendChanSize)
 
 	go agent.loop()
 
-	if cfg.PingInterval != 0 {
-		if cfg.PingInterval > 1800*time.Second {
+	if agentCfg.PingDuration != 0 {
+		if agentCfg.PingDuration > 1800*time.Second {
 			panic("over ping interval limit")
 		}
 
-		if cfg.PingTimeout == 0 {
+		if agentCfg.PingTimeout == 0 {
 			panic("ping timeout is 0")
 		}
 
-		go agent.keepalive(cfg.PingInterval, cfg.PingTimeout, cfg.TimeoutCallBack)
+		go agent.keepalive(agentCfg.PingDuration, agentCfg.PingTimeout, agentCfg.TimeoutCallBack)
 	}
 	return agent
 }
