@@ -108,7 +108,7 @@ var TestAgentConfig = AgentConfig{
 	MsgBufferSize:   TestBuffsize,
 	MsgSendChanSize: TestSendChanSize,
 	MsgRecvChanSize: TestRecvChanSize,
-	PingInterval:    TestPingInterval,
+	PingDuration:    TestPingInterval,
 	PingTimeout:     TestPingTimeout,
 	ServerId:        TestServerId,
 	AuthKey:         TestAuthKey,

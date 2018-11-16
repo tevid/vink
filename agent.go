@@ -263,7 +263,7 @@ func (agent *Agent) Close() {
 }
 
 //保持连接
-func (agent *Agent) keepalive(pingInterval, pingTimeout time.Duration, timeoutCallback func() bool) {
+func (agent *Agent) keepalive(pingDuration, pingTimeout time.Duration, timeoutCallback func() bool) {
 	agent.pingChan = make(chan struct{})
 	for {
 		select {
